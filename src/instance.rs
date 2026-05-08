@@ -142,9 +142,9 @@ pub fn create_instance(
   ),
   InstanceCreationError,
 > {
-  use crate::ADDITIONAL_VALIDATION_FEATURES;
-
   use super::validation_layers::{self, DebugUtils};
+  use crate::ADDITIONAL_VALIDATION_FEATURES;
+  use std::marker::PhantomData;
 
   #[cfg(feature = "surface")]
   let surface_extensions = ash_window::enumerate_required_extensions(display_handle.as_raw())
@@ -177,7 +177,7 @@ pub fn create_instance(
     p_enabled_validation_features: ADDITIONAL_VALIDATION_FEATURES.as_ptr(),
     disabled_validation_feature_count: 0,
     p_disabled_validation_features: ptr::null(),
-    _marker: marker::PhantomData,
+    _marker: PhantomData,
   };
 
   let instance = create_instance_checked(
