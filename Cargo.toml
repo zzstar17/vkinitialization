@@ -1,0 +1,28 @@
+[package]
+name = "vkinitialization"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ash = "0.38.0"
+ash-window = "0.13.0"
+# version depends on ash-window
+raw-window-handle = "0.6.0"
+log = "0.4.29"
+thiserror = "2.0.18"
+vkobjects = {git = "https://github.com/zzstar17/vkobjects"}
+itertools = "0.14.0"
+
+[dev-dependencies]
+winit = {version = "0.30.13", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen", "wayland-csd-adwaita"]}
+env_logger = "0.11.0"
+
+[features]
+"default" = ["load", "graphics_family", "surface"]
+"vl" = []
+"load" = ["ash/loaded"]
+"link" = ["ash/linked"]
+"surface" = []
+"graphics_family" = []
+"compute_family" = []
+"transfer_family" = []
