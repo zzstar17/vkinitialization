@@ -8,7 +8,7 @@ use std::{
 };
 use vkobjects::{ManuallyDestroyed, errors::OutOfMemoryError};
 
-use crate::device::{DeviceFeatures, queues::Queue};
+use crate::device::{PhysicalDeviceFeatures, queues::Queue};
 
 use super::{DeviceExtensions, PhysicalDevice, SingleQueues};
 
@@ -45,7 +45,7 @@ impl Device {
     instance: &ash::Instance,
     physical_device: &PhysicalDevice,
     mut to_enable_extensions: DeviceExtensions,
-    physical_device_supported_features: DeviceFeatures<'_>,
+    physical_device_supported_features: PhysicalDeviceFeatures<'_>,
   ) -> Result<(Self, SingleQueues), DeviceCreationError> {
     let (queue_create_infos, unique_queue_size) =
       super::queues::get_single_queue_create_infos(&physical_device.queue_families);

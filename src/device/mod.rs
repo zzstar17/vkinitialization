@@ -153,7 +153,7 @@ pub fn get_extended_properties(
 }
 
 #[allow(unused)]
-pub struct DeviceFeatures<'a> {
+pub struct PhysicalDeviceFeatures<'a> {
   pub f10: vk::PhysicalDeviceFeatures,
   pub f11: vk::PhysicalDeviceVulkan11Features<'a>,
   pub f12: vk::PhysicalDeviceVulkan12Features<'a>,
@@ -166,7 +166,7 @@ pub fn get_extended_features<'a>(
   instance: &ash::Instance,
   physical_device: vk::PhysicalDevice,
   supported_extensions: &DeviceExtensions,
-) -> DeviceFeatures<'a> {
+) -> PhysicalDeviceFeatures<'a> {
   let mut features10: MaybeUninit<vk::PhysicalDeviceFeatures2> = MaybeUninit::uninit();
   let mut features11: MaybeUninit<vk::PhysicalDeviceVulkan11Features> = MaybeUninit::uninit();
   let mut features12: MaybeUninit<vk::PhysicalDeviceVulkan12Features> = MaybeUninit::uninit();
@@ -213,7 +213,7 @@ pub fn get_extended_features<'a>(
       false
     };
 
-    DeviceFeatures {
+    PhysicalDeviceFeatures {
       f10: features10.assume_init().features,
       f11: features11.assume_init(),
       f12: features12.assume_init(),

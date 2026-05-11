@@ -5,7 +5,7 @@ use ash::vk;
 use crate::{
   debug_print_device_memory_info,
   device::{
-    DeviceExtensions, DeviceFeatures,
+    DeviceExtensions, PhysicalDeviceFeatures,
     device_selector::{PhysicalDeviceSelectionError, PhysicalDeviceSelectionSuccess},
   },
 };
@@ -58,7 +58,7 @@ impl PhysicalDevice {
       PhysicalDeviceSelectionError,
     >,
   ) -> Result<
-    Option<(PhysicalDevice, DeviceExtensions, DeviceFeatures<'a>)>,
+    Option<(PhysicalDevice, DeviceExtensions, PhysicalDeviceFeatures<'a>)>,
     PhysicalDeviceSelectionError,
   > {
     #[cfg(feature = "surface")]

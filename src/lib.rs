@@ -10,7 +10,7 @@ mod validation_layers;
 use std::ffi::CStr;
 
 pub use entry::get_entry;
-pub use instance::{InstanceCreationError, create_instance};
+pub use instance::{InstanceCreationError, create_instance, InstanceOptionalExtensions};
 
 #[cfg(feature = "surface")]
 pub use surface::{Surface, SurfaceError};

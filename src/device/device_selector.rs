@@ -6,7 +6,7 @@ use vkobjects::{errors::OutOfMemoryError, utility};
 use crate::device::{get_extended_features, get_extended_properties};
 
 use super::{
-  DeviceExtensions, DeviceFeatures, PhysicalDeviceProperties, QueueFamilies, vendor::Vendor,
+  DeviceExtensions, PhysicalDeviceFeatures, PhysicalDeviceProperties, QueueFamilies, vendor::Vendor,
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -59,7 +59,7 @@ pub struct PhysicalDeviceSelectionSuccess<'a> {
   pub physical_device: vk::PhysicalDevice,
   pub properties: PhysicalDeviceProperties<'a>,
   pub supported_extensions: DeviceExtensions,
-  pub supported_features: DeviceFeatures<'a>,
+  pub supported_features: PhysicalDeviceFeatures<'a>,
   pub queue_families: QueueFamilies,
 }
 
@@ -67,7 +67,7 @@ pub struct PhysicalDeviceSelection<'a> {
   pub physical_device: vk::PhysicalDevice,
   pub properties: PhysicalDeviceProperties<'a>,
   pub supported_extensions: DeviceExtensions,
-  pub supported_features: DeviceFeatures<'a>,
+  pub supported_features: PhysicalDeviceFeatures<'a>,
 }
 
 #[derive(Debug, thiserror::Error)]
