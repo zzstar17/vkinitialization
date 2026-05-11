@@ -3,6 +3,7 @@ use std::fmt::Display;
 use vkobjects::utility;
 
 // implements some display properties for vendors
+#[derive(Debug, Clone, Copy)]
 pub enum Vendor {
   Nvidia,
   Amd,

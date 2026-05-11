@@ -57,6 +57,7 @@ pub fn log_device_properties(properties: &vk::PhysicalDeviceProperties) {
   );
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct PhysicalDeviceSelectionSuccess<'a> {
   pub physical_device: vk::PhysicalDevice,
   pub properties: PhysicalDeviceProperties<'a>,
@@ -65,6 +66,7 @@ pub struct PhysicalDeviceSelectionSuccess<'a> {
   pub queue_families: QueueFamilies,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct PhysicalDeviceSelection<'a> {
   pub physical_device: vk::PhysicalDevice,
   pub properties: PhysicalDeviceProperties<'a>,

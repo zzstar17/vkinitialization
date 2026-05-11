@@ -12,6 +12,7 @@ use crate::device::{PhysicalDeviceFeatures, queues::Queue};
 
 use super::{DeviceExtensions, PhysicalDevice, SingleQueues};
 
+#[derive(Clone)]
 pub struct Device {
   pub inner: ash::Device,
   pub enabled_extensions: DeviceExtensions,

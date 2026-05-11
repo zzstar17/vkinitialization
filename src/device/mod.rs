@@ -26,7 +26,7 @@ pub const GRAPHICS_QUEUE_COLOR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const COMPUTE_QUEUE_COLOR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 pub const TRANSFER_QUEUE_COLOR: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct DeviceExtensions {
   pub memory_priority: bool,
   pub pageable_device_local_memory: bool,
@@ -106,7 +106,7 @@ impl DeviceExtensions {
 }
 
 #[allow(unused)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct PhysicalDeviceProperties<'a> {
   pub p10: vk::PhysicalDeviceProperties,
   pub p11: vk::PhysicalDeviceVulkan11Properties<'a>,
@@ -153,8 +153,7 @@ pub fn get_extended_properties(
   }
 }
 
-#[allow(unused)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct PhysicalDeviceFeatures<'a> {
   pub f10: vk::PhysicalDeviceFeatures,
   pub f11: vk::PhysicalDeviceVulkan11Features<'a>,

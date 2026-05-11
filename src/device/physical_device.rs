@@ -12,6 +12,7 @@ use crate::{
 
 use super::QueueFamilies;
 
+#[derive(Debug, Clone, Copy)]
 pub struct CustomProperties {
   // p10
   pub driver_version: u32,
@@ -24,6 +25,7 @@ pub struct CustomProperties {
 }
 
 // Saves physical device additional information in order to not query it multiple times
+#[derive(Clone)]
 pub struct PhysicalDevice {
   inner: vk::PhysicalDevice,
   pub queue_families: QueueFamilies,

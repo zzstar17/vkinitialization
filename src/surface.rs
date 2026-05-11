@@ -4,6 +4,7 @@ use ash::vk;
 use raw_window_handle::{DisplayHandle, WindowHandle};
 use vkobjects::{ManuallyDestroyed, errors::OutOfMemoryError};
 
+#[derive(Clone)]
 pub struct Surface {
   inner: vk::SurfaceKHR,
   loader: ash::khr::surface::Instance,

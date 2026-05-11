@@ -61,6 +61,7 @@ unsafe extern "system" fn vulkan_debug_utils_callback(
   vk::FALSE
 }
 
+#[derive(Clone)]
 pub struct DebugUtils {
   loader: ash::ext::debug_utils::Instance,
   messenger: vk::DebugUtilsMessengerEXT,

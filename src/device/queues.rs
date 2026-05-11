@@ -32,7 +32,7 @@ impl Deref for Queue {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct QueueFamilies {
   #[cfg(feature = "graphics_family")]
   pub graphics: QueueFamily,
