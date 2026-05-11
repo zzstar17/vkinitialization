@@ -10,7 +10,7 @@ mod validation_layers;
 use std::ffi::CStr;
 
 pub use entry::get_entry;
-pub use instance::{InstanceCreationError, create_instance, InstanceOptionalExtensions};
+pub use instance::{InstanceCreationError, InstanceOptionalExtensions, create_instance};
 
 #[cfg(feature = "surface")]
 pub use surface::{Surface, SurfaceError};
@@ -137,16 +137,14 @@ mod tests {
     instance: &'a ash::Instance,
     #[cfg(feature = "surface")] surface: &Surface,
   ) -> Result<Option<PhysicalDeviceSelectionSuccess<'a>>, PhysicalDeviceSelectionError> {
-    let selected_devices = enumerate_physical_devices_for_selection(instance)
-      .expect("Failed to enumerate physical devices");
+    let selected_devices = enumerate_physical_devices_for_selection(instance)?;
     let selected_device = selected_devices.into_iter().next().unwrap();
     let queue_families = QueueFamilies::get_from_physical_device(
       instance,
       selected_device.physical_device,
       #[cfg(feature = "surface")]
       surface,
-    )
-    .expect("Failed to retrieve queue families");
+    )?;
 
     Ok(Some(PhysicalDeviceSelectionSuccess {
       physical_device: selected_device.physical_device,

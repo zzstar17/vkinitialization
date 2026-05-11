@@ -3,7 +3,7 @@ use std::ffi::CStr;
 use ash::vk;
 use vkobjects::{errors::OutOfMemoryError, utility};
 
-use crate::device::{get_extended_features, get_extended_properties};
+use crate::device::{get_extended_features, get_extended_properties, queues::QueueFamilyError};
 
 use super::{
   DeviceExtensions, PhysicalDeviceFeatures, PhysicalDeviceProperties, QueueFamilies, vendor::Vendor,
@@ -15,6 +15,8 @@ pub enum PhysicalDeviceSelectionError {
   OutOfMemory(#[from] OutOfMemoryError),
   #[error("instance.enumerate_physical_devices() returned VK_ERROR_INITIALIZATION_FAILED")]
   VulkanInitializationFailed,
+  #[error(transparent)]
+  QueueFamilyError(#[from] QueueFamilyError),
 }
 
 impl From<vk::Result> for PhysicalDeviceSelectionError {
@@ -70,29 +72,9 @@ pub struct PhysicalDeviceSelection<'a> {
   pub supported_features: PhysicalDeviceFeatures<'a>,
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum DeviceSelectionError {
-  #[error(transparent)]
-  OutOfMemory(#[from] OutOfMemoryError),
-  #[error("instance.enumerate_physical_devices() returned VK_ERROR_INITIALIZATION_FAILED")]
-  VulkanInitializationFailed,
-}
-
-impl From<vk::Result> for DeviceSelectionError {
-  fn from(value: vk::Result) -> Self {
-    match value {
-      vk::Result::ERROR_OUT_OF_HOST_MEMORY | vk::Result::ERROR_OUT_OF_DEVICE_MEMORY => {
-        Self::OutOfMemory(value.into())
-      }
-      vk::Result::ERROR_INITIALIZATION_FAILED => Self::VulkanInitializationFailed,
-      _ => panic!(),
-    }
-  }
-}
-
 pub fn enumerate_physical_devices_for_selection<'a>(
   instance: &'a ash::Instance,
-) -> Result<Vec<PhysicalDeviceSelection<'a>>, DeviceSelectionError> {
+) -> Result<Vec<PhysicalDeviceSelection<'a>>, PhysicalDeviceSelectionError> {
   let devices = unsafe { instance.enumerate_physical_devices() }?;
 
   let mut selection = Vec::with_capacity(devices.len());
