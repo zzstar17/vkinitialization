@@ -106,6 +106,7 @@ impl DeviceExtensions {
 }
 
 #[allow(unused)]
+#[derive(Debug, Clone, Copy)]
 pub struct PhysicalDeviceProperties<'a> {
   pub p10: vk::PhysicalDeviceProperties,
   pub p11: vk::PhysicalDeviceVulkan11Properties<'a>,
@@ -153,6 +154,7 @@ pub fn get_extended_properties(
 }
 
 #[allow(unused)]
+#[derive(Debug, Clone, Copy)]
 pub struct PhysicalDeviceFeatures<'a> {
   pub f10: vk::PhysicalDeviceFeatures,
   pub f11: vk::PhysicalDeviceVulkan11Features<'a>,
