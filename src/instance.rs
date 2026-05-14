@@ -37,7 +37,6 @@ The instance could not be created for implementation-specific reasons."
 pub struct InstanceOptionalExtensions {
   pub get_surface_capabilities2: bool,
   pub surface_maintenance1: bool,
-  pub count: usize,
 }
 
 impl InstanceOptionalExtensions {
@@ -45,7 +44,6 @@ impl InstanceOptionalExtensions {
     Self {
       get_surface_capabilities2: true,
       surface_maintenance1: true,
-      count: 2,
     }
   }
 
@@ -61,33 +59,18 @@ impl InstanceOptionalExtensions {
         .any(|props| unsafe { utility::i8_array_as_cstr(&props.extension_name) }.unwrap() == ext)
     };
 
-    let mut supported_count = 0;
     if is_supported(vk::KHR_GET_SURFACE_CAPABILITIES2_NAME) {
       supported.get_surface_capabilities2 = true;
-      supported_count += 1;
     }
     if is_supported(SURFACE_MAINTENANCE_EXT_NAME) {
       supported.surface_maintenance1 = true;
-      supported_count += 1;
     }
 
-    supported.count = supported_count;
     Ok(supported)
   }
 
-  pub fn filter_only_wanted(&mut self, wanted: Self) {
-    if !wanted.get_surface_capabilities2 && self.get_surface_capabilities2 {
-      self.get_surface_capabilities2 = false;
-      self.count -= 1;
-    }
-    if !wanted.surface_maintenance1 && self.surface_maintenance1 {
-      self.surface_maintenance1 = false;
-      self.count -= 1;
-    }
-  }
-
   pub fn get_extension_list(&self) -> Vec<*const i8> {
-    let mut ptrs = Vec::with_capacity(self.count);
+    let mut ptrs = Vec::new();
     if self.get_surface_capabilities2 {
       ptrs.push(vk::KHR_GET_SURFACE_CAPABILITIES2_NAME.as_ptr());
     }
@@ -95,6 +78,19 @@ impl InstanceOptionalExtensions {
       ptrs.push(SURFACE_MAINTENANCE_EXT_NAME.as_ptr());
     }
     ptrs
+  }
+
+  pub fn and(&self, other: Self) -> Self {
+    let mut result = Self::default();
+
+    if other.get_surface_capabilities2 && self.get_surface_capabilities2 {
+      result.get_surface_capabilities2 = true;
+    }
+    if other.surface_maintenance1 && self.surface_maintenance1 {
+      result.surface_maintenance1 = true;
+    }
+
+    result
   }
 }
 
@@ -149,8 +145,8 @@ pub fn create_instance(
   #[cfg(feature = "surface")]
   let surface_extensions = ash_window::enumerate_required_extensions(display_handle.as_raw())
     .map_err(OutOfMemoryError::from)?;
-  let mut optional_extensions = InstanceOptionalExtensions::get_supported(entry)?;
-  optional_extensions.filter_only_wanted(wanted_optional_extensions);
+  let supported_extensions = InstanceOptionalExtensions::get_supported(entry)?;
+  let optional_extensions = wanted_optional_extensions.and(supported_extensions);
   let optional_extensions_list = optional_extensions.get_extension_list();
 
   let extensions_len = optional_extensions_list.len() + 1;
@@ -206,8 +202,8 @@ pub fn create_instance(
   #[cfg(feature = "surface")]
   let surface_extensions = ash_window::enumerate_required_extensions(display_handle.as_raw())
     .map_err(OutOfMemoryError::from)?;
-  let mut optional_extensions = InstanceOptionalExtensions::get_supported(entry)?;
-  optional_extensions.filter_only_wanted(wanted_optional_extensions);
+  let supported_extensions = InstanceOptionalExtensions::get_supported(entry)?;
+  let optional_extensions = wanted_optional_extensions.and(supported_extensions);
   let optional_extensions_list = optional_extensions.get_extension_list();
 
   let extensions_len = optional_extensions_list.len();

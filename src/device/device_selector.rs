@@ -17,6 +17,9 @@ pub enum PhysicalDeviceSelectionError {
   VulkanInitializationFailed,
   #[error(transparent)]
   QueueFamilyError(#[from] QueueFamilyError),
+  #[cfg(feature = "surface")]
+  #[error(transparent)]
+  SurfaceError(#[from] crate::SurfaceError)
 }
 
 impl From<vk::Result> for PhysicalDeviceSelectionError {
