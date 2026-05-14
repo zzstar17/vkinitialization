@@ -8,7 +8,7 @@ use std::{
 };
 use vkobjects::{ManuallyDestroyed, errors::OutOfMemoryError};
 
-use crate::device::{PhysicalDeviceFeatures, queues::Queue};
+use crate::device::{DeviceFeatures, physical_device::PhysicalDeviceCreation, queues::Queue};
 
 use super::{DeviceExtensions, PhysicalDevice, SingleQueues};
 
@@ -30,6 +30,10 @@ impl Deref for Device {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DeviceCreationError {
+  #[error("Device does not satisfy required device extensions. Unsupported extensions:\n{0}")]
+  RequiredExtensionsNotSupported(String),
+  #[error("Device does not satisfy required device features. Unsupported features:\n{0}")]
+  RequiredFeaturesNotSupported(String),
   #[error("Device creation returned VK_ERROR_INITIALIZATION_FAILED")]
   VulkanInitializationFailed,
   #[error(
@@ -44,48 +48,59 @@ This may indicate problems with the graphics driver or instability with the phys
 impl Device {
   pub fn create(
     instance: &ash::Instance,
-    physical_device: &PhysicalDevice,
-    mut to_enable_extensions: DeviceExtensions,
-    physical_device_supported_features: PhysicalDeviceFeatures<'_>,
+    physical_device_creation: &PhysicalDeviceCreation,
+    required_extensions: DeviceExtensions,
+    optional_extensions: DeviceExtensions,
+    required_features: DeviceFeatures,
+    optional_features: DeviceFeatures,
   ) -> Result<(Self, SingleQueues), DeviceCreationError> {
+    let physical_device = &physical_device_creation.physical_device;
+
     let (queue_create_infos, unique_queue_size) =
       super::queues::get_single_queue_create_infos(&physical_device.queue_families);
 
-    if !physical_device_supported_features.swapchain_maintenance1 {
-      to_enable_extensions.disable_swapchain_maintenance1();
+    let missing_required_extensions = physical_device_creation
+      .supported_extensions
+      .filter_missing(required_extensions);
+    if let Some(extensions) = missing_required_extensions {
+      return Err(DeviceCreationError::RequiredExtensionsNotSupported(
+        format!("{:?}", extensions),
+      ));
+    }
+    let missing_required_features = physical_device_creation
+      .supported_features
+      .filter_missing(required_features);
+    if let Some(features) = missing_required_features {
+      return Err(DeviceCreationError::RequiredFeaturesNotSupported(format!(
+        "{:?}",
+        features
+      )));
     }
 
-    let extension_ptrs = to_enable_extensions.get_extension_list();
+    let supported_optional_extensions = physical_device_creation
+      .supported_extensions
+      .and(optional_extensions);
+    let supported_optional_features = physical_device_creation
+      .supported_features
+      .and(optional_features);
 
+    let to_enable_extensions = supported_optional_extensions.or(required_extensions);
+    let mut to_enable_features = supported_optional_features.or(required_features);
+    to_enable_features.filter_extension_required(&to_enable_extensions);
+
+    let extension_ptrs = to_enable_extensions.get_extension_list();
     log::info!(
       "Enabling the following device extensions:\n{:#?}",
       to_enable_extensions
     );
 
-    let mut features12 = vk::PhysicalDeviceVulkan12Features {
-      ..Default::default()
-    };
-    let mut features13 = vk::PhysicalDeviceVulkan13Features {
-      synchronization2: vk::TRUE,
-      ..Default::default()
-    };
+    let mut features_full = to_enable_features.to_full_physical_device_features();
+    let features2 = features_full.get_features_2();
 
-    // enabled features
-    let mut features2 = vk::PhysicalDeviceFeatures2::default()
-      .features(vk::PhysicalDeviceFeatures::default())
-      .push_next(&mut features13)
-      .push_next(&mut features12);
-
-    // vk::PhysicalDeviceSwapchainMaintenance1FeaturesKHR does not exist, but this should be equivalent
-    let mut swapchain_maintenance1 = vk::PhysicalDeviceSwapchainMaintenance1FeaturesEXT::default();
-    assert_eq!(
-      swapchain_maintenance1.s_type,
-      vk::StructureType::from_raw(1000275000)
+    log::info!(
+      "Enabling the following device features:\n{:#?}",
+      to_enable_features
     );
-    if to_enable_extensions.swapchain_maintenance1 {
-      swapchain_maintenance1.swapchain_maintenance1 = vk::TRUE;
-      features2 = features2.push_next(&mut swapchain_maintenance1);
-    }
 
     #[allow(deprecated)]
     let create_info = vk::DeviceCreateInfo {

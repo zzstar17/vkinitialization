@@ -102,7 +102,7 @@ mod tests {
 
   use crate::{
     device::{
-      Device, PhysicalDevice, QueueFamilies,
+      Device, DeviceExtensions, DeviceFeatures, PhysicalDevice, QueueFamilies,
       device_selector::{
         PhysicalDeviceSelectionError, PhysicalDeviceSelectionSuccess,
         enumerate_physical_devices_for_selection,
@@ -223,20 +223,31 @@ mod tests {
       )
       .expect("Failed to create surface");
 
-      let (
-        physical_device,
-        physical_device_supported_extensions,
-        physical_device_supported_features,
-      ) = unsafe { PhysicalDevice::select(&self.instance, &surface, select_physical_device) }
-        .expect("Failed to get physical device")
-        .unwrap();
+      let physical_device_creation =
+        unsafe { PhysicalDevice::select(&self.instance, &surface, select_physical_device) }
+          .expect("Failed to get physical device")
+          .unwrap();
 
       #[allow(unused)]
       let (device, queues) = Device::create(
         &self.instance,
-        &physical_device,
-        physical_device_supported_extensions,
-        physical_device_supported_features,
+        &physical_device_creation,
+        DeviceExtensions {
+          swapchain: true,
+          ..Default::default()
+        },
+        DeviceExtensions {
+          memory_priority: true,
+          pageable_device_local_memory: true,
+          swapchain_maintenance1: true,
+          ..Default::default()
+        },
+        DeviceFeatures::default(),
+        DeviceFeatures {
+          swapchain_maintenance1: true,
+          synchronization2: true,
+          ..Default::default()
+        },
       )
       .expect("Failed to create device");
 
@@ -308,21 +319,26 @@ mod tests {
       activated_optional_extensions
     );
 
-    let (physical_device, physical_device_supported_extensions, physical_device_supported_features) =
+    let physical_device_creation =
       unsafe { PhysicalDevice::select(&instance, select_physical_device) }
         .expect("Failed to get physical device")
         .unwrap();
 
-    let mut device_extensions = physical_device_supported_extensions;
-    device_extensions.disable_swapchain();
-    device_extensions.disable_swapchain_maintenance1();
-
     #[allow(unused)]
     let (device, queues) = Device::create(
       &instance,
-      &physical_device,
-      device_extensions,
-      physical_device_supported_features,
+      &physical_device_creation,
+      DeviceExtensions::default(),
+      DeviceExtensions {
+        memory_priority: true,
+        pageable_device_local_memory: true,
+        ..Default::default()
+      },
+      DeviceFeatures::default(),
+      DeviceFeatures {
+        synchronization2: true,
+        ..Default::default()
+      },
     )
     .expect("Failed to create device");
 

@@ -1,13 +1,16 @@
 pub mod device_selector;
+mod extensions;
+mod features;
 mod logical_device;
 mod physical_device;
 mod queues;
 mod vendor;
 
+pub use extensions::DeviceExtensions;
+pub use features::{DeviceFeatures, PhysicalDeviceFeatures, get_extended_features};
 pub use logical_device::{Device, DeviceCreationError};
 pub use physical_device::PhysicalDevice;
 pub use queues::{QueueFamilies, SingleQueues};
-use vkobjects::{errors::OutOfMemoryError, utility};
 
 use std::{
   ffi::{CStr, c_void},
@@ -17,93 +20,12 @@ use std::{
 
 use ash::vk;
 
-use crate::SWAPCHAIN_MAINTENANCE_EXT_NAME;
-
 pub const GRAPHICS_QUEUE_LABEL: &CStr = c"GRAPHICS QUEUE";
 pub const COMPUTE_QUEUE_LABEL: &CStr = c"COMPUTE QUEUE";
 pub const TRANSFER_QUEUE_LABEL: &CStr = c"TRANSFER QUEUE";
 pub const GRAPHICS_QUEUE_COLOR: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 pub const COMPUTE_QUEUE_COLOR: [f32; 4] = [0.0, 0.0, 1.0, 1.0];
 pub const TRANSFER_QUEUE_COLOR: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
-
-#[derive(Debug, Default, Clone, Copy)]
-pub struct DeviceExtensions {
-  pub memory_priority: bool,
-  pub pageable_device_local_memory: bool,
-  pub swapchain: bool,
-  pub swapchain_maintenance1: bool,
-  count: usize,
-}
-
-impl DeviceExtensions {
-  pub fn mark_supported_by_physical_device(
-    instance: &ash::Instance,
-    physical_device: vk::PhysicalDevice,
-  ) -> Result<Self, OutOfMemoryError> {
-    let properties = unsafe { instance.enumerate_device_extension_properties(physical_device)? };
-
-    let mut supported = Self::default();
-
-    // a bit inefficient as it retests for valid cstrings but at least doesn't do any allocations
-    let is_supported = |ext| {
-      properties
-        .iter()
-        .any(|props| unsafe { utility::i8_array_as_cstr(&props.extension_name) }.unwrap() == ext)
-    };
-
-    let mut supported_count = 0;
-    if is_supported(ash::ext::memory_priority::NAME) {
-      supported.memory_priority = true;
-      supported_count += 1;
-    }
-    if is_supported(ash::ext::pageable_device_local_memory::NAME) {
-      supported.pageable_device_local_memory = true;
-      supported_count += 1;
-    }
-    if is_supported(ash::khr::swapchain::NAME) {
-      supported.swapchain = true;
-      supported_count += 1;
-    }
-    if is_supported(SWAPCHAIN_MAINTENANCE_EXT_NAME) {
-      supported.swapchain_maintenance1 = true;
-      supported_count += 1;
-    }
-
-    supported.count = supported_count;
-    Ok(supported)
-  }
-
-  pub fn get_extension_list(&self) -> Vec<*const i8> {
-    let mut ptrs = Vec::with_capacity(self.count);
-    if self.memory_priority {
-      ptrs.push(ash::ext::memory_priority::NAME.as_ptr());
-    }
-    if self.pageable_device_local_memory {
-      ptrs.push(ash::ext::pageable_device_local_memory::NAME.as_ptr());
-    }
-    if self.swapchain {
-      ptrs.push(ash::khr::swapchain::NAME.as_ptr());
-    }
-    if self.swapchain_maintenance1 {
-      ptrs.push(SWAPCHAIN_MAINTENANCE_EXT_NAME.as_ptr());
-    }
-    ptrs
-  }
-
-  pub fn disable_swapchain_maintenance1(&mut self) {
-    if self.swapchain_maintenance1 {
-      self.swapchain_maintenance1 = false;
-      self.count -= 1;
-    }
-  }
-
-  pub fn disable_swapchain(&mut self) {
-    if self.swapchain {
-      self.swapchain = false;
-      self.count -= 1;
-    }
-  }
-}
 
 #[allow(unused)]
 #[derive(Debug, Clone, Copy, Default)]
@@ -149,77 +71,6 @@ pub fn get_extended_properties(
       p11: props11.assume_init(),
       p12: props12.assume_init(),
       p13: props13.assume_init(),
-    }
-  }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct PhysicalDeviceFeatures<'a> {
-  pub f10: vk::PhysicalDeviceFeatures,
-  pub f11: vk::PhysicalDeviceVulkan11Features<'a>,
-  pub f12: vk::PhysicalDeviceVulkan12Features<'a>,
-  pub f13: vk::PhysicalDeviceVulkan13Features<'a>,
-  pub swapchain_maintenance1: bool,
-}
-
-// https://www.reddit.com/r/vulkan/comments/1j16wut/if_an_extension_defines_a_feature_struct_and_this/
-pub fn get_extended_features<'a>(
-  instance: &ash::Instance,
-  physical_device: vk::PhysicalDevice,
-  supported_extensions: &DeviceExtensions,
-) -> PhysicalDeviceFeatures<'a> {
-  let mut features10: MaybeUninit<vk::PhysicalDeviceFeatures2> = MaybeUninit::uninit();
-  let mut features11: MaybeUninit<vk::PhysicalDeviceVulkan11Features> = MaybeUninit::uninit();
-  let mut features12: MaybeUninit<vk::PhysicalDeviceVulkan12Features> = MaybeUninit::uninit();
-  let mut features13: MaybeUninit<vk::PhysicalDeviceVulkan13Features> = MaybeUninit::uninit();
-
-  // vk::PhysicalDeviceSwapchainMaintenance1FeaturesKHR does not exist, but this should be equivalent
-  let mut swapchain_maintenance1: MaybeUninit<vk::PhysicalDeviceSwapchainMaintenance1FeaturesEXT> =
-    MaybeUninit::uninit();
-
-  let features10_ptr = features10.as_mut_ptr();
-  let features11_ptr = features11.as_mut_ptr();
-  let features12_ptr = features12.as_mut_ptr();
-  let features13_ptr = features13.as_mut_ptr();
-
-  let swapchain_maintenance1_ptr = swapchain_maintenance1.as_mut_ptr();
-
-  unsafe {
-    addr_of_mut!((*features10_ptr).s_type).write(vk::StructureType::PHYSICAL_DEVICE_FEATURES_2);
-    addr_of_mut!((*features11_ptr).s_type)
-      .write(vk::StructureType::PHYSICAL_DEVICE_VULKAN_1_1_FEATURES);
-    addr_of_mut!((*features12_ptr).s_type)
-      .write(vk::StructureType::PHYSICAL_DEVICE_VULKAN_1_2_FEATURES);
-    addr_of_mut!((*features13_ptr).s_type)
-      .write(vk::StructureType::PHYSICAL_DEVICE_VULKAN_1_3_FEATURES);
-
-    addr_of_mut!((*features10_ptr).p_next).write(features11_ptr as *mut c_void);
-    addr_of_mut!((*features11_ptr).p_next).write(features12_ptr as *mut c_void);
-    addr_of_mut!((*features12_ptr).p_next).write(features13_ptr as *mut c_void);
-    addr_of_mut!((*features13_ptr).p_next).write(ptr::null_mut::<c_void>());
-
-    if supported_extensions.swapchain_maintenance1 {
-      addr_of_mut!((*swapchain_maintenance1_ptr).s_type)
-        .write(vk::StructureType::from_raw(1000275000));
-
-      addr_of_mut!((*features13_ptr).p_next).write(swapchain_maintenance1_ptr as *mut c_void);
-      addr_of_mut!((*swapchain_maintenance1_ptr).p_next).write(ptr::null_mut::<c_void>());
-    }
-
-    instance.get_physical_device_features2(physical_device, features10_ptr.as_mut().unwrap());
-
-    let swapchain_maintenance1_feature_supported = if supported_extensions.swapchain_maintenance1 {
-      swapchain_maintenance1.assume_init().swapchain_maintenance1 == vk::TRUE
-    } else {
-      false
-    };
-
-    PhysicalDeviceFeatures {
-      f10: features10.assume_init().features,
-      f11: features11.assume_init(),
-      f12: features12.assume_init(),
-      f13: features13.assume_init(),
-      swapchain_maintenance1: swapchain_maintenance1_feature_supported,
     }
   }
 }

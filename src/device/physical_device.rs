@@ -5,7 +5,7 @@ use ash::vk;
 use crate::{
   debug_print_device_memory_info,
   device::{
-    DeviceExtensions, PhysicalDeviceFeatures,
+    DeviceExtensions, DeviceFeatures,
     device_selector::{PhysicalDeviceSelectionError, PhysicalDeviceSelectionSuccess},
   },
 };
@@ -34,6 +34,12 @@ pub struct PhysicalDevice {
   pub queue_family_properties: Box<[vk::QueueFamilyProperties]>,
 }
 
+pub struct PhysicalDeviceCreation {
+  pub physical_device: PhysicalDevice,
+  pub supported_extensions: DeviceExtensions,
+  pub supported_features: DeviceFeatures,
+}
+
 impl Deref for PhysicalDevice {
   type Target = vk::PhysicalDevice;
 
@@ -59,10 +65,7 @@ impl PhysicalDevice {
       Option<PhysicalDeviceSelectionSuccess<'a>>,
       PhysicalDeviceSelectionError,
     >,
-  ) -> Result<
-    Option<(PhysicalDevice, DeviceExtensions, PhysicalDeviceFeatures<'a>)>,
-    PhysicalDeviceSelectionError,
-  > {
+  ) -> Result<Option<PhysicalDeviceCreation>, PhysicalDeviceSelectionError> {
     #[cfg(feature = "surface")]
     let selection_result = device_selection_function(instance, surface)?;
     #[cfg(not(feature = "surface"))]
@@ -90,8 +93,8 @@ impl PhysicalDevice {
 
         debug_print_device_memory_info(&mem_properties).unwrap();
 
-        Ok(Some((
-          PhysicalDevice {
+        Ok(Some(PhysicalDeviceCreation {
+          physical_device: PhysicalDevice {
             inner: physical_device,
             queue_families,
             mem_properties,
@@ -106,8 +109,10 @@ impl PhysicalDevice {
             queue_family_properties,
           },
           supported_extensions,
-          supported_features,
-        )))
+          supported_features: DeviceFeatures::from_full_physical_device_features(
+            &supported_features,
+          ),
+        }))
       }
       None => Ok(None),
     }
