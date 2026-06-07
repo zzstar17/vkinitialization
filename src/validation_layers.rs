@@ -111,6 +111,7 @@ impl ManuallyDestroyed for DebugUtils {
   }
 }
 
+#[derive(Clone)]
 pub struct DebugUtilsMarker {
   loader: ash::ext::debug_utils::Device,
 }
