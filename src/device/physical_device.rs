@@ -7,22 +7,11 @@ use crate::{
   device::{
     DeviceExtensions, DeviceFeatures,
     device_selector::{PhysicalDeviceSelectionError, PhysicalDeviceSelectionSuccess},
+    physical_device_properties::PhysicalDeviceProperties,
   },
 };
 
 use super::QueueFamilies;
-
-#[derive(Debug, Clone, Copy)]
-pub struct CustomProperties {
-  // p10
-  pub driver_version: u32,
-  pub vendor_id: u32,
-  pub device_id: u32,
-  pub pipeline_cache_uuid: [u8; vk::UUID_SIZE],
-
-  // p11
-  pub max_memory_allocation_size: u64,
-}
 
 // Saves physical device additional information in order to not query it multiple times
 #[derive(Clone)]
@@ -30,7 +19,7 @@ pub struct PhysicalDevice {
   inner: vk::PhysicalDevice,
   pub queue_families: QueueFamilies,
   pub mem_properties: vk::PhysicalDeviceMemoryProperties,
-  pub properties: CustomProperties,
+  pub properties: PhysicalDeviceProperties,
   pub queue_family_properties: Box<[vk::QueueFamilyProperties]>,
 }
 
@@ -98,14 +87,7 @@ impl PhysicalDevice {
             inner: physical_device,
             queue_families,
             mem_properties,
-            properties: CustomProperties {
-              driver_version: properties.p10.driver_version,
-              vendor_id: properties.p10.vendor_id,
-              device_id: properties.p10.device_id,
-              pipeline_cache_uuid: properties.p10.pipeline_cache_uuid,
-
-              max_memory_allocation_size: properties.p11.max_memory_allocation_size,
-            },
+            properties: properties.into(),
             queue_family_properties,
           },
           supported_extensions,
