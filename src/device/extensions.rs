@@ -41,7 +41,7 @@ impl DeviceExtensions {
       supported.swapchain_maintenance1 = true;
     }
     if is_supported(ash::khr::dynamic_rendering_local_read::NAME) {
-      supported.swapchain = true;
+      supported.dynamic_rendering_local_read = true;
     }
 
     Ok(supported)

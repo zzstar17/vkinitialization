@@ -1,0 +1,11 @@
+cargo test --no-default-features --features="load, graphics_family"
+cargo test --no-default-features --features="load, compute_family"
+cargo test --no-default-features --features="load, graphics_family, compute_family"
+cargo test --no-default-features --features="load, graphics_family, transfer_family"
+cargo test --no-default-features --features="load, compute_family, transfer_family"
+cargo test --no-default-features --features="load, graphics_family, compute_family, transfer_family"
+
+cargo test --no-default-features --features="load, surface, graphics_family"
+cargo test --no-default-features --features="load, surface, graphics_family, compute_family"
+cargo test --no-default-features --features="load, surface, graphics_family, transfer_family"
+cargo test --no-default-features --features="load, surface, graphics_family, compute_family, transfer_family"

@@ -11,6 +11,7 @@ use crate::device::DeviceExtensions;
 #[derive(Debug, Default, Clone, Copy)]
 pub struct DeviceFeatures {
   pub synchronization2: bool,
+  pub dynamic_rendering: bool,
   pub swapchain_maintenance1: bool,
 }
 
@@ -41,6 +42,7 @@ impl DeviceFeatures {
   pub fn from_full_physical_device_features(features: &PhysicalDeviceFeatures) -> Self {
     Self {
       synchronization2: features.f13.synchronization2 == vk::TRUE,
+      dynamic_rendering: features.f13.dynamic_rendering == vk::TRUE,
       swapchain_maintenance1: features.swapchain_maintenance1,
     }
   }
@@ -65,6 +67,7 @@ impl DeviceFeatures {
       features12: vk::PhysicalDeviceVulkan12Features::default(),
       features13: vk::PhysicalDeviceVulkan13Features {
         synchronization2: self.synchronization2 as u32,
+        dynamic_rendering: self.dynamic_rendering as u32,
         ..Default::default()
       },
       swapchain_maintenance1,
@@ -84,6 +87,10 @@ impl DeviceFeatures {
       missing.synchronization2 = true;
       none_missing = false;
     }
+    if other.dynamic_rendering && !self.dynamic_rendering {
+      missing.dynamic_rendering = true;
+      none_missing = false;
+    }
 
     if none_missing {
       return None;
@@ -101,6 +108,9 @@ impl DeviceFeatures {
     if other.synchronization2 && self.synchronization2 {
       result.synchronization2 = true;
     }
+    if other.dynamic_rendering && self.dynamic_rendering {
+      result.dynamic_rendering = true;
+    }
 
     result
   }
@@ -113,6 +123,9 @@ impl DeviceFeatures {
     }
     if other.synchronization2 || self.synchronization2 {
       result.synchronization2 = true;
+    }
+    if other.dynamic_rendering || self.dynamic_rendering {
+      result.dynamic_rendering = true;
     }
 
     result

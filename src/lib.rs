@@ -94,10 +94,7 @@ mod tests {
   use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
   #[cfg(feature = "surface")]
   use winit::{
-    application::ApplicationHandler,
-    event::WindowEvent,
-    event_loop::{ActiveEventLoop, EventLoop},
-    window::{Window, WindowId},
+    application::ApplicationHandler, event::WindowEvent, event_loop::{ActiveEventLoop, EventLoop}, window::{Window, WindowId},
   };
 
   use crate::{
@@ -111,8 +108,12 @@ mod tests {
     instance::InstanceOptionalExtensions,
   };
 
+  #[cfg(target_os = "linux")]
   #[cfg(feature = "surface")]
   use winit::platform::wayland::EventLoopBuilderExtWayland;
+  #[cfg(target_os = "windows")]
+  #[cfg(feature = "surface")]
+  use winit::platform::windows::EventLoopBuilderExtWindows;
 
   use super::*;
 
@@ -247,6 +248,7 @@ mod tests {
         DeviceFeatures {
           swapchain_maintenance1: true,
           synchronization2: true,
+          dynamic_rendering: true,
           ..Default::default()
         },
       )
@@ -339,6 +341,7 @@ mod tests {
       DeviceFeatures::default(),
       DeviceFeatures {
         synchronization2: true,
+        dynamic_rendering: true,
         ..Default::default()
       },
     )
