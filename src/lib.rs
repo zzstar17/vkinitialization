@@ -240,6 +240,7 @@ mod tests {
           memory_priority: true,
           pageable_device_local_memory: true,
           swapchain_maintenance1: true,
+          dynamic_rendering_local_read: true,
           ..Default::default()
         },
         DeviceFeatures::default(),
@@ -332,6 +333,7 @@ mod tests {
       DeviceExtensions {
         memory_priority: true,
         pageable_device_local_memory: true,
+        dynamic_rendering_local_read: true,
         ..Default::default()
       },
       DeviceFeatures::default(),

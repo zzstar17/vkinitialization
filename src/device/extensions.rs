@@ -9,6 +9,7 @@ pub struct DeviceExtensions {
   pub pageable_device_local_memory: bool,
   pub swapchain: bool,
   pub swapchain_maintenance1: bool,
+  pub dynamic_rendering_local_read: bool,
 }
 
 impl DeviceExtensions {
@@ -39,6 +40,9 @@ impl DeviceExtensions {
     if is_supported(SWAPCHAIN_MAINTENANCE_EXT_NAME) {
       supported.swapchain_maintenance1 = true;
     }
+    if is_supported(ash::khr::dynamic_rendering_local_read::NAME) {
+      supported.swapchain = true;
+    }
 
     Ok(supported)
   }
@@ -56,6 +60,9 @@ impl DeviceExtensions {
     }
     if self.swapchain_maintenance1 {
       ptrs.push(SWAPCHAIN_MAINTENANCE_EXT_NAME.as_ptr());
+    }
+    if self.dynamic_rendering_local_read {
+      ptrs.push(ash::khr::dynamic_rendering_local_read::NAME.as_ptr());
     }
     ptrs
   }
@@ -81,6 +88,10 @@ impl DeviceExtensions {
       missing.swapchain_maintenance1 = true;
       none_missing = false;
     }
+    if other.dynamic_rendering_local_read && !self.dynamic_rendering_local_read {
+      missing.dynamic_rendering_local_read = true;
+      none_missing = false;
+    }
 
     if none_missing {
       return None;
@@ -104,6 +115,9 @@ impl DeviceExtensions {
     if other.swapchain_maintenance1 && self.swapchain_maintenance1 {
       result.swapchain_maintenance1 = true;
     }
+    if other.dynamic_rendering_local_read && self.dynamic_rendering_local_read {
+      result.dynamic_rendering_local_read = true;
+    }
 
     result
   }
@@ -122,6 +136,9 @@ impl DeviceExtensions {
     }
     if other.swapchain_maintenance1 || self.swapchain_maintenance1 {
       result.swapchain_maintenance1 = true;
+    }
+    if other.dynamic_rendering_local_read || self.dynamic_rendering_local_read {
+      result.dynamic_rendering_local_read = true;
     }
 
     result
