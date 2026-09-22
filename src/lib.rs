@@ -94,7 +94,10 @@ mod tests {
   use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
   #[cfg(feature = "surface")]
   use winit::{
-    application::ApplicationHandler, event::WindowEvent, event_loop::{ActiveEventLoop, EventLoop}, window::{Window, WindowId},
+    application::ApplicationHandler,
+    event::WindowEvent,
+    event_loop::{ActiveEventLoop, EventLoop},
+    window::{Window, WindowId},
   };
 
   use crate::{

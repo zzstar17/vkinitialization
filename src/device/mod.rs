@@ -17,7 +17,7 @@ pub use physical_device_properties::{
   LifetimePhysicalDeviceProperties, PhysicalDeviceProperties, PhysicalDeviceProperties11,
   PhysicalDeviceProperties12, PhysicalDeviceProperties13, get_extended_properties,
 };
-pub use queues::{QueueFamilies, SingleQueues};
+pub use queues::{Queue, QueueFamilies, SingleQueues, create_mutexes_for_queues};
 
 pub const GRAPHICS_QUEUE_LABEL: &CStr = c"GRAPHICS QUEUE";
 pub const COMPUTE_QUEUE_LABEL: &CStr = c"COMPUTE QUEUE";

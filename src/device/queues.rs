@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref, ptr};
+use std::{marker::PhantomData, ops::Deref, ptr, sync::{Arc, Mutex}};
 
 use ash::vk;
 
@@ -29,6 +29,12 @@ impl Deref for Queue {
 
   fn deref(&self) -> &Self::Target {
     &self.handle
+  }
+}
+
+impl PartialEq for Queue {
+  fn eq(&self, other: &Self) -> bool {
+    self.handle == other.handle
   }
 }
 
@@ -64,6 +70,32 @@ pub struct SingleQueues {
   pub compute: Queue,
   #[cfg(feature = "transfer_family")]
   pub transfer: Queue,
+}
+
+/// Create Arc<Mutex<Queue>> for single queues or groups of the same queue
+///
+/// Only useful when the same queues are used in multiple threads
+///
+/// Returns the list of mutexes and queue to mutex index assignment
+pub fn create_mutexes_for_queues(queues: &[Queue]) -> (Vec<Arc<Mutex<Queue>>>, Vec<usize>) {
+  // make equal queues next to each other
+  let mut queue_indices: Vec<usize> = (0..queues.len()).collect();
+  queue_indices.sort_by(|a, b| queues[*a].handle.cmp(&queues[*b].handle));
+
+  let mut mutexes = Vec::new();
+  let mut last = vk::Queue::null();
+  for i in 0..queue_indices.len() {
+    let queue_index = queue_indices[i];
+    let queue = queues[queue_index];
+    if queue.handle != last {
+      last = queue.handle;
+      mutexes.push(Arc::new(Mutex::new(queue)));
+    }
+    queue_indices[i] = mutexes.len() - 1;
+  }
+  let mutex_assignment = queue_indices;
+
+  (mutexes, mutex_assignment)
 }
 
 fn queue_create_info<'a>(
