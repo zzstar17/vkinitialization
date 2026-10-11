@@ -1,4 +1,9 @@
-use std::{marker::PhantomData, ops::Deref, ptr, sync::{Arc, Mutex}};
+use std::{
+  marker::PhantomData,
+  ops::Deref,
+  ptr,
+  sync::{Arc, Mutex},
+};
 
 use ash::vk;
 

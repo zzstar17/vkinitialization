@@ -1,13 +1,13 @@
 [package]
 name = "vkinitialization"
-version = "0.1.12"
+version = "0.1.13"
 edition = "2024"
 
 [dependencies]
 ash = "0.38.0"
-ash-window = "0.13.0"
+ash-window = {version = "0.13.0", optional = true}
 # version depends on ash-window
-raw-window-handle = "0.6.0"
+raw-window-handle = {version = "0.6.0", optional = true}
 log = "0.4.29"
 thiserror = "2.0.18"
 vkobjects = {git = "https://github.com/zzstar17/vkobjects"}
@@ -22,7 +22,7 @@ env_logger = "0.11.0"
 "vl" = []
 "load" = ["ash/loaded"]
 "link" = ["ash/linked"]
-"surface" = []
+"surface" = ["ash-window", "raw-window-handle"]
 "graphics_family" = []
 "compute_family" = []
 "transfer_family" = []

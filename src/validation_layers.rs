@@ -1,7 +1,7 @@
 use ash::vk::{self};
 use vkobjects::{ManuallyDestroyed, errors::OutOfMemoryError};
 
-use std::{ffi::CStr, marker::PhantomData, os::raw::c_void, ptr};
+use std::{ffi::CStr, os::raw::c_void, ptr};
 
 use crate::{VALIDATION_LAYERS, device::SingleQueues};
 
@@ -113,7 +113,7 @@ impl ManuallyDestroyed for DebugUtils {
 
 #[derive(Clone)]
 pub struct DebugUtilsMarker {
-  loader: ash::ext::debug_utils::Device,
+  pub loader: ash::ext::debug_utils::Device,
 }
 
 impl DebugUtilsMarker {
@@ -234,18 +234,115 @@ impl DebugUtilsMarker {
     name: &CStr,
   ) -> Result<(), OutOfMemoryError> {
     let info = vk::DebugUtilsObjectNameInfoEXT {
-      s_type: vk::StructureType::DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-      p_next: ptr::null(),
       object_type,
       object_handle,
       p_object_name: name.as_ptr(),
-      _marker: PhantomData,
+      ..Default::default()
     };
     unsafe {
       self
         .loader
         .set_debug_utils_object_name(&info)
         .map_err(|err| err.into())
+    }
+  }
+
+  pub unsafe fn set_obj_tag(
+    &self,
+    object_type: vk::ObjectType,
+    object_handle: u64,
+    tag_name: u64,
+    tag_data: &[u8],
+  ) -> Result<(), OutOfMemoryError> {
+    let info = vk::DebugUtilsObjectTagInfoEXT {
+      object_type,
+      object_handle,
+      tag_name,
+      tag_size: tag_data.len(),
+      p_tag: tag_data.as_ptr() as *const c_void,
+      ..Default::default()
+    };
+    unsafe {
+      self
+        .loader
+        .set_debug_utils_object_tag(&info)
+        .map_err(|err| err.into())
+    }
+  }
+
+  pub unsafe fn cmd_begin_debug_utils_label(
+    &self,
+    cb: vk::CommandBuffer,
+    name: &CStr,
+    color: [f32; 4],
+  ) {
+    let label = vk::DebugUtilsLabelEXT {
+      p_label_name: name.as_ptr(),
+      color,
+      ..Default::default()
+    };
+    unsafe {
+      self.loader.cmd_begin_debug_utils_label(cb, &label);
+    }
+  }
+
+  pub unsafe fn cmd_end_debug_utils_label(&self, cb: vk::CommandBuffer) {
+    unsafe {
+      self.loader.cmd_end_debug_utils_label(cb);
+    }
+  }
+
+  pub unsafe fn cmd_insert_debug_utils_label(
+    &self,
+    cb: vk::CommandBuffer,
+    name: &CStr,
+    color: [f32; 4],
+  ) {
+    let label = vk::DebugUtilsLabelEXT {
+      p_label_name: name.as_ptr(),
+      color,
+      ..Default::default()
+    };
+    unsafe {
+      self.loader.cmd_insert_debug_utils_label(cb, &label);
+    }
+  }
+
+  pub unsafe fn queue_begin_debug_utils_label(
+    &self,
+    queue: vk::Queue,
+    name: &CStr,
+    color: [f32; 4],
+  ) {
+    let label = vk::DebugUtilsLabelEXT {
+      p_label_name: name.as_ptr(),
+      color,
+      ..Default::default()
+    };
+    unsafe {
+      self.loader.queue_begin_debug_utils_label(queue, &label);
+    }
+  }
+
+  pub unsafe fn queue_end_debug_utils_label(&self, queue: vk::Queue) {
+    unsafe {
+      self.loader.queue_end_debug_utils_label(queue);
+    }
+  }
+
+  pub unsafe fn queue_insert_debug_utils_label(
+    &self,
+    queue: vk::Queue,
+    name: &CStr,
+    color: [f32; 4],
+  ) {
+    let label = vk::DebugUtilsLabelEXT {
+      p_label_name: name.as_ptr(),
+      color,
+      ..Default::default()
+    };
+    unsafe {
+      self.loader.queue_insert_debug_utils_label(queue, &label);
     }
   }
 }
