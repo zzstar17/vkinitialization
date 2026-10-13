@@ -13,6 +13,7 @@ pub struct DeviceFeatures {
   pub synchronization2: bool,
   pub dynamic_rendering: bool,
   pub swapchain_maintenance1: bool,
+  pub shader_demote_to_helper_invocation: bool,
 }
 
 pub struct SubmissionDeviceFeatures<'a> {
@@ -44,6 +45,8 @@ impl DeviceFeatures {
       synchronization2: features.f13.synchronization2 == vk::TRUE,
       dynamic_rendering: features.f13.dynamic_rendering == vk::TRUE,
       swapchain_maintenance1: features.swapchain_maintenance1,
+      shader_demote_to_helper_invocation: features.f13.shader_demote_to_helper_invocation
+        == vk::TRUE,
     }
   }
 
@@ -68,6 +71,7 @@ impl DeviceFeatures {
       features13: vk::PhysicalDeviceVulkan13Features {
         synchronization2: self.synchronization2 as u32,
         dynamic_rendering: self.dynamic_rendering as u32,
+        shader_demote_to_helper_invocation: self.shader_demote_to_helper_invocation as u32,
         ..Default::default()
       },
       swapchain_maintenance1,
@@ -91,6 +95,10 @@ impl DeviceFeatures {
       missing.dynamic_rendering = true;
       none_missing = false;
     }
+    if other.shader_demote_to_helper_invocation && !self.shader_demote_to_helper_invocation {
+      missing.shader_demote_to_helper_invocation = true;
+      none_missing = false;
+    }
 
     if none_missing {
       return None;
@@ -111,6 +119,9 @@ impl DeviceFeatures {
     if other.dynamic_rendering && self.dynamic_rendering {
       result.dynamic_rendering = true;
     }
+    if other.shader_demote_to_helper_invocation && self.shader_demote_to_helper_invocation {
+      result.shader_demote_to_helper_invocation = true;
+    }
 
     result
   }
@@ -126,6 +137,9 @@ impl DeviceFeatures {
     }
     if other.dynamic_rendering || self.dynamic_rendering {
       result.dynamic_rendering = true;
+    }
+    if other.shader_demote_to_helper_invocation || self.shader_demote_to_helper_invocation {
+      result.shader_demote_to_helper_invocation = true;
     }
 
     result
